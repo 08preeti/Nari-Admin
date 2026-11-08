@@ -1,0 +1,27 @@
+module.exports = {
+  MODULE_TYPES: ['stitching', 'readymade'],
+  ADMIN_ROLES: ['owner', 'staff'],
+  PAYMENT_STATUSES: ['Pending', 'Partially Paid', 'Paid'],
+  STANDARD_SIZES: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Free Size'],
+  DEFAULT_LOW_STOCK_THRESHOLD: 5,
+  STOCK_STATUSES: ['in_stock', 'low_stock', 'out_of_stock'],
+  INVENTORY_LOG_TYPES: ['initial', 'manual-edit', 'adjustment', 'order', 'order-restore', 'order-reopen'],
+  STITCHING_ORDER_STATUSES: [
+    'New',
+    'Confirmed',
+    'In Progress',
+    'Ready for Trial',
+    'Ready for Delivery',
+    'Delivered',
+    'Cancelled',
+  ],
+  READYMADE_ORDER_STATUSES: [
+    'New',
+    'Confirmed',
+    'Processing',
+    'Packed',
+    'Shipped/Ready for Pickup',
+    'Delivered',
+    'Cancelled',
+  ],
+};
