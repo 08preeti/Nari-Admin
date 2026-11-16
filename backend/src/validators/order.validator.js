@@ -5,6 +5,7 @@ const {
   isValidDate,
   isPositiveInteger,
   isValidMobile,
+  isNonNegativeNumber,
 } = require('./common');
 const {
   STITCHING_ORDER_STATUSES,
@@ -122,6 +123,42 @@ const validateReadymadeOrderCreate = (body) => {
   return errors;
 };
 
+// Basic order form (admin): customer, address, catalogue picks, amounts and dates.
+const validateBasicOrder = (body) => {
+  const errors = [];
+  if (!isNonEmptyString(body.customerName) || body.customerName.trim().length > 100) {
+    errors.push({ field: 'customerName', message: 'customer name is required (100 characters max)' });
+  }
+  if (!isValidMobile(body.phone)) {
+    errors.push({ field: 'phone', message: 'a valid 10-digit phone number is required' });
+  }
+  if (!isNonEmptyString(body.address) || body.address.trim().length > 500) {
+    errors.push({ field: 'address', message: 'address is required (500 characters max)' });
+  }
+  ['mainCategory', 'category', 'subCategory'].forEach((key) => {
+    if (!isObjectId(body[key])) errors.push({ field: key, message: `${key} must be selected` });
+  });
+  if (!isNonNegativeNumber(body.totalAmount)) {
+    errors.push({ field: 'totalAmount', message: 'total must be a number, 0 or more' });
+  }
+  if (!isNonNegativeNumber(body.paidAmount)) {
+    errors.push({ field: 'paidAmount', message: 'amount paid must be a number, 0 or more' });
+  } else if (isNonNegativeNumber(body.totalAmount) && body.paidAmount > body.totalAmount) {
+    errors.push({ field: 'paidAmount', message: 'amount paid cannot be greater than the total' });
+  }
+  if (!isValidDate(body.receivedDate)) {
+    errors.push({ field: 'receivedDate', message: 'order received date must be a valid date' });
+  }
+  if (body.deliveredDate !== undefined && body.deliveredDate !== null && body.deliveredDate !== '') {
+    if (!isValidDate(body.deliveredDate)) {
+      errors.push({ field: 'deliveredDate', message: 'delivered date must be a valid date' });
+    } else if (isValidDate(body.receivedDate) && new Date(body.deliveredDate) < new Date(body.receivedDate)) {
+      errors.push({ field: 'deliveredDate', message: 'delivered date cannot be before the order received date' });
+    }
+  }
+  return errors;
+};
+
 const buildStatusValidator = (allowed) => (body) => {
   const errors = [];
   if (!allowed.includes(body.status)) {
@@ -137,6 +174,7 @@ module.exports = {
   validateStitchingOrderCreate,
   validateStitchingOrderUpdate,
   validateReadymadeOrderCreate,
+  validateBasicOrder,
   validateStitchingStatus: buildStatusValidator(STITCHING_ORDER_STATUSES),
   validateReadymadeStatus: buildStatusValidator(READYMADE_ORDER_STATUSES),
 };

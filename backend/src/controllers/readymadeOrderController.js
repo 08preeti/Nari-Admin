@@ -3,6 +3,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const { sendSuccess } = require('../utils/response');
 const { generateOrderId } = require('../services/orderIdService');
+const { toBasicFields, applyBasicFields } = require('../services/basicOrderService');
 const { buildOrderItems } = require('../services/readymadeOrderService');
 const inventory = require('../services/inventoryService');
 const { getPagination, paginationMeta, normalizeMobile } = require('../utils/helpers');
@@ -55,6 +56,32 @@ exports.create = asyncHandler(async (req, res) => {
       status: order.status,
     },
   });
+});
+
+// Admin "Add order" form: basic details only (no design / product lines).
+exports.createBasic = asyncHandler(async (req, res) => {
+  const f = await toBasicFields(req.body);
+  const order = new ReadymadeOrder({
+    orderId: await generateOrderId('readymade'),
+    source: 'admin',
+    createdAt: f.receivedDate, // so date filters and the dashboard use the received date
+    items: [],
+    orderTotal: 0,
+    address: f.address,
+    statusHistory: [{ status: 'New' }],
+  });
+  applyBasicFields(order, f, req.admin._id);
+  await order.save();
+  sendSuccess(res, { statusCode: 201, message: 'Order added', data: order });
+});
+
+exports.updateBasic = asyncHandler(async (req, res) => {
+  const order = await ReadymadeOrder.findById(req.params.id);
+  if (!order) throw new ApiError(404, 'Readymade order not found');
+  if (order.source !== 'admin') throw new ApiError(400, 'Only orders added from the Add order form can be edited here');
+  applyBasicFields(order, await toBasicFields(req.body), req.admin._id);
+  await order.save();
+  sendSuccess(res, { message: 'Order updated', data: order });
 });
 
 exports.getAll = asyncHandler(async (req, res) => {

@@ -88,9 +88,8 @@ export default function CatalogEditor({
     setSubmitted(true);
     setError("");
     if (Object.keys(errors).length) return;
-    const payload = config.simple ? {} : { isActive: values.isActive };
+    const payload = {};
     config.fields.forEach(([k, , kind]) => {
-      if (k === "moduleType" && editing) return; // module type is permanent
       if (kind === "file") {
         if (values[k]) payload[k] = values[k];
         return;
@@ -241,19 +240,6 @@ export default function CatalogEditor({
               )}
             </div>
           ))}
-          {!config.simple && (
-            <label className="check big full-field">
-              <input
-                type="checkbox"
-                checked={values.isActive}
-                onChange={(e) => set("isActive", e.target.checked)}
-              />
-              <div>
-                <b>Active</b>
-                <small>Inactive records are hidden from customers.</small>
-              </div>
-            </label>
-          )}
         </div>
       </form>
     </Modal>

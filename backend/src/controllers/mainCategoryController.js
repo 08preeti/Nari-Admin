@@ -1,8 +1,10 @@
 const MainCategory = require("../models/MainCategory");
 const Category = require("../models/Category");
-const { assertCanDelete } = require("../services/catalogService");
+const {
+  assertCanDelete,
+  deleteMainCategoryWithChildren,
+} = require("../services/catalogService");
 const ApiError = require("../utils/ApiError");
-const { MODULE_TYPES } = require("../utils/constants");
 const asyncHandler = require("../utils/asyncHandler");
 const { sendSuccess } = require("../utils/response");
 const {
@@ -20,13 +22,10 @@ const {
 } = require("../utils/helpers");
 
 const FIELDS = ["name", "image", "description", "displayOrder", "isActive"];
-const CREATE_FIELDS = [...FIELDS, "moduleType"];
 
 exports.getAll = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);
   const filter = listFilter(req);
-  if (MODULE_TYPES.includes(req.query.moduleType))
-    filter.moduleType = req.query.moduleType;
 
   if (typeof req.query.q === "string" && req.query.q.trim()) {
     filter.name = new RegExp(
@@ -62,11 +61,30 @@ const withUploadedImage = (req, data) => {
   return data;
 };
 
+// Same main category name is not allowed twice (case-insensitive: "Women" and "women" are the same).
+const assertNameFree = async (name, exceptId) => {
+  if (typeof name !== "string" || !name.trim()) return;
+  const filter = { name: name.trim() };
+  if (exceptId) filter._id = { $ne: exceptId };
+  const clash = await MainCategory.findOne(filter).collation({
+    locale: "en",
+    strength: 2,
+  });
+  if (clash)
+    throw new ApiError(409, `Main category "${clash.name}" already exists`);
+};
+
 exports.create = asyncHandler(async (req, res) => {
+  try {
+    await assertNameFree(req.body.name);
+  } catch (err) {
+    if (req.file) removeUploadedFile(req.file.path);
+    throw err;
+  }
   let item;
   try {
     item = await MainCategory.create(
-      withUploadedImage(req, pick(req.body, CREATE_FIELDS)),
+      withUploadedImage(req, pick(req.body, FIELDS)),
     );
   } catch (err) {
     if (req.file) removeUploadedFile(req.file.path);
@@ -82,6 +100,13 @@ exports.create = asyncHandler(async (req, res) => {
 exports.update = asyncHandler(async (req, res) => {
   const item = await MainCategory.findById(req.params.id);
   if (!item) throw new ApiError(404, "Main category not found");
+
+  try {
+    await assertNameFree(req.body.name, item._id);
+  } catch (err) {
+    if (req.file) removeUploadedFile(req.file.path);
+    throw err;
+  }
 
   const previousImage = item.image?.url;
   item.set(withUploadedImage(req, pick(req.body, FIELDS)));
@@ -111,17 +136,11 @@ exports.setStatus = asyncHandler(async (req, res) => {
 exports.remove = asyncHandler(async (req, res) => {
   const item = await MainCategory.findById(req.params.id);
   if (!item) throw new ApiError(404, "Main category not found");
-  await assertCanDelete(
-    "mainCategory",
-    item._id,
-    "main category",
-    Category,
-    "mainCategory",
-  );
-  await item.deleteOne();
-  removeStoredImage(item.image?.url);
+  // Deletes its categories and subcategories too; refuses if products/designs still use it.
+  await assertCanDelete("mainCategory", item._id, "main category");
+  const removed = await deleteMainCategoryWithChildren(item);
   sendSuccess(res, {
-    message: "Main category deleted",
+    message: `Main category deleted (with ${removed.categories} categories and ${removed.subCategories} subcategories)`,
     data: { _id: item._id },
   });
 });

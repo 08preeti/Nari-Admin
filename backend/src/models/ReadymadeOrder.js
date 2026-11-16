@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const { READYMADE_ORDER_STATUSES } = require("../utils/constants");
 const {
   customerSchema,
+  catalogSchema,
   paymentSchema,
   statusHistorySchema,
   applyPaymentRules,
@@ -17,13 +18,9 @@ const addressSchema = new Schema(
       trim: true,
     },
     line2: { type: String, trim: true },
-    city: { type: String, required: [true, "City is required"], trim: true },
-    state: { type: String, required: [true, "State is required"], trim: true },
-    pincode: {
-      type: String,
-      required: [true, "Pincode is required"],
-      trim: true,
-    },
+    city: { type: String, trim: true },
+    state: { type: String, trim: true },
+    pincode: { type: String, trim: true },
   },
   { _id: false },
 );
@@ -66,11 +63,19 @@ const readymadeOrderSchema = new Schema(
     items: {
       type: [orderItemSchema],
       validate: [
-        (items) => items.length > 0,
+        function hasItems(items) {
+          return this.source === "admin" || items.length > 0;
+        },
         "An order needs at least one item",
       ],
     },
     orderTotal: { type: Number, required: true, min: 0 },
+    // Orders typed in from the admin "Add order" form ("admin") vs placed from the storefront ("storefront").
+    source: { type: String, enum: ["storefront", "admin"], default: "storefront", index: true },
+    catalog: { type: catalogSchema },
+    receivedDate: { type: Date },
+    deliveredDate: { type: Date },
+
     notes: { type: String, trim: true, maxlength: 1000 },
     payment: { type: paymentSchema, default: () => ({}) },
     // Absent on orders created before inventory tracking, so they never touch stock.

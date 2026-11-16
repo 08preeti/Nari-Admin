@@ -11,7 +11,6 @@ const idOf = (x) => (x && typeof x === "object" ? x._id : x);
 export default function CategorySelects({
   value,
   onChange,
-  moduleType,
   errors = {},
   disabled,
 }) {
@@ -21,10 +20,10 @@ export default function CategorySelects({
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
-    listRecords("/main-categories", { moduleType })
+    listRecords("/main-categories")
       .then((r) => setMains(r.data || []))
       .catch((e) => setLoadError(e.message));
-  }, [moduleType]);
+  }, []);
   useEffect(() => {
     listRecords(
       "/categories",
