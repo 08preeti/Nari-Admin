@@ -22,3 +22,6 @@ Thumbs.db
 
 # Migration backups (contain real data)
 backend/backups/
+
+# Uploaded images
+uploads/

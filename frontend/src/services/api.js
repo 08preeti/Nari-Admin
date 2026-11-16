@@ -1,6 +1,13 @@
 const BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace(/\/$/, '');
 const TOKEN_KEY = 'nari_admin_token';
 
+// Turns a stored image path ("/uploads/...") into a full URL on the API server. Full http(s) URLs are returned as is.
+export const assetUrl = (url) => {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${BASE.replace(/\/api$/, '')}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 export function getToken() { return localStorage.getItem(TOKEN_KEY); }
 export function setToken(token) { localStorage.setItem(TOKEN_KEY, token); }
 export function clearToken() { localStorage.removeItem(TOKEN_KEY); }
@@ -10,7 +17,9 @@ export class ApiError extends Error {
 }
 
 export async function api(path, options = {}) {
-  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  // FormData (file uploads) must not get a JSON content type: the browser sets the multipart boundary itself.
+  const isForm = typeof FormData !== 'undefined' && options.body instanceof FormData;
+  const headers = { ...(isForm ? {} : { 'Content-Type': 'application/json' }), ...(options.headers || {}) };
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
   let response;

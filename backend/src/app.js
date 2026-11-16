@@ -4,6 +4,7 @@ const env = require('./config/env');
 const routes = require('./routes');
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
+const { UPLOAD_DIR } = require('./middleware/upload');
 
 const app = express();
 
@@ -25,6 +26,9 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ limit: '1mb' }));
+
+// Uploaded images (category images etc.) are public so the storefront can show them.
+app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '7d', index: false, dotfiles: 'ignore' }));
 
 app.use('/api', routes);
 

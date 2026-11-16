@@ -1,41 +1,127 @@
-import { useEffect, useState } from 'react';
-import { listRecords } from '../../services/catalogService';
+import { useEffect, useState } from "react";
+import { listRecords } from "../../services/catalogService";
 
 const label = (x) => (x.isActive === false ? `${x.name} (inactive)` : x.name);
+const idOf = (x) => (x && typeof x === "object" ? x._id : x);
 
-// Dependent dropdowns: Main category -> Category -> Subcategory.
-// Only children of the selected parent are loaded; changing a parent clears invalid children.
-export default function CategorySelects({ value, onChange, moduleType, errors = {}, disabled }) {
+// Main category, Category and Subcategory dropdowns. All three load their lists straight away.
+// - Pick a main category: Category shows only its categories (and Subcategory resets).
+// - Pick a category: Subcategory shows only its subcategories.
+// - Pick a category or subcategory first: its parent(s) are filled in automatically.
+export default function CategorySelects({
+  value,
+  onChange,
+  moduleType,
+  errors = {},
+  disabled,
+}) {
   const [mains, setMains] = useState([]);
   const [cats, setCats] = useState([]);
   const [subs, setSubs] = useState([]);
-  const [loadError, setLoadError] = useState('');
+  const [loadError, setLoadError] = useState("");
 
-  useEffect(() => { listRecords('/main-categories', { moduleType }).then((r) => setMains(r.data || [])).catch((e) => setLoadError(e.message)); }, [moduleType]);
   useEffect(() => {
-    if (!value.mainCategory) { setCats([]); return; }
-    listRecords('/categories', { mainCategory: value.mainCategory }).then((r) => setCats(r.data || [])).catch((e) => setLoadError(e.message));
+    listRecords("/main-categories", { moduleType })
+      .then((r) => setMains(r.data || []))
+      .catch((e) => setLoadError(e.message));
+  }, [moduleType]);
+  useEffect(() => {
+    listRecords(
+      "/categories",
+      value.mainCategory ? { mainCategory: value.mainCategory } : {},
+    )
+      .then((r) => setCats(r.data || []))
+      .catch((e) => setLoadError(e.message));
   }, [value.mainCategory]);
   useEffect(() => {
-    if (!value.category) { setSubs([]); return; }
-    listRecords('/sub-categories', { category: value.category }).then((r) => setSubs(r.data || [])).catch((e) => setLoadError(e.message));
+    listRecords(
+      "/sub-categories",
+      value.category ? { category: value.category } : {},
+    )
+      .then((r) => setSubs(r.data || []))
+      .catch((e) => setLoadError(e.message));
   }, [value.category]);
 
-  const field = (key, text, options, onPick, off) => <div className="field">
-    <label>{text}</label>
-    <select value={value[key]} disabled={disabled || off} className={errors[key] ? 'invalid' : ''} onChange={(e) => onPick(e.target.value)}>
-      <option value="">Select {text.toLowerCase()}</option>
-      {options.map((o) => <option key={o._id} value={o._id}>{label(o)}</option>)}
-    </select>
-    {errors[key] && <small className="field-error">{errors[key]}</small>}
-  </div>;
+  // With no parent chosen, only show items that belong to this module's main categories.
+  const mainIds = new Set(mains.map((m) => m._id));
+  const catOptions = value.mainCategory
+    ? cats
+    : cats.filter((c) => mainIds.has(idOf(c.mainCategory)));
+  const catIds = new Set(catOptions.map((c) => c._id));
+  const subOptions = value.category
+    ? subs
+    : subs.filter((s) => catIds.has(idOf(s.category)));
 
-  return <div className="form-grid three">
-    {loadError && <div className="error full-field">{loadError}</div>}
-    {field('mainCategory', 'Main category', mains, (v) => onChange({ mainCategory: v, category: '', subCategory: '' }))}
-    {field('category', 'Category', cats, (v) => onChange({ ...value, category: v, subCategory: '' }), !value.mainCategory)}
-    {field('subCategory', 'Subcategory', subs, (v) => onChange({ ...value, subCategory: v }), !value.category)}
-    {value.mainCategory && cats.length === 0 && <small className="hint full-field">This main category has no categories yet. Add some under Categories first.</small>}
-    {value.category && subs.length === 0 && <small className="hint full-field">This category has no subcategories yet. Add some under Subcategories first.</small>}
-  </div>;
+  const catText = (c) =>
+    value.mainCategory || !c.mainCategory?.name
+      ? label(c)
+      : `${c.mainCategory.name} › ${label(c)}`;
+  const subText = (s) =>
+    value.category || !s.category?.name
+      ? label(s)
+      : `${s.category.name} › ${label(s)}`;
+
+  const pickMain = (id) =>
+    onChange({ mainCategory: id, category: "", subCategory: "" });
+  const pickCategory = (id) => {
+    if (!id) return onChange({ ...value, category: "", subCategory: "" });
+    const c = cats.find((x) => x._id === id);
+    return onChange({
+      mainCategory: idOf(c?.mainCategory) || value.mainCategory,
+      category: id,
+      subCategory: "",
+    });
+  };
+  const pickSub = (id) => {
+    if (!id) return onChange({ ...value, subCategory: "" });
+    const s = subs.find((x) => x._id === id);
+    const categoryId = idOf(s?.category) || value.category;
+    const c = cats.find((x) => x._id === categoryId);
+    return onChange({
+      mainCategory: idOf(c?.mainCategory) || value.mainCategory,
+      category: categoryId,
+      subCategory: id,
+    });
+  };
+
+  const field = (key, text, options, text2, onPick) => (
+    <div className="field">
+      <label>{text}</label>
+      <select
+        value={value[key]}
+        disabled={disabled}
+        className={errors[key] ? "invalid" : ""}
+        onChange={(e) => onPick(e.target.value)}
+      >
+        <option value="">Select {text.toLowerCase()}</option>
+        {options.map((o) => (
+          <option key={o._id} value={o._id}>
+            {text2(o)}
+          </option>
+        ))}
+      </select>
+      {errors[key] && <small className="field-error">{errors[key]}</small>}
+    </div>
+  );
+
+  return (
+    <div className="form-grid three">
+      {loadError && <div className="error full-field">{loadError}</div>}
+      {field("mainCategory", "Main category", mains, label, pickMain)}
+      {field("category", "Category", catOptions, catText, pickCategory)}
+      {field("subCategory", "Subcategory", subOptions, subText, pickSub)}
+      {value.mainCategory && cats.length === 0 && (
+        <small className="hint full-field">
+          This main category has no categories yet. Add some under Categories
+          first.
+        </small>
+      )}
+      {value.category && subs.length === 0 && (
+        <small className="hint full-field">
+          This category has no subcategories yet. Add some under Subcategories
+          first.
+        </small>
+      )}
+    </div>
+  );
 }

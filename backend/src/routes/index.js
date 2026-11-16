@@ -7,6 +7,7 @@ router.get('/health', (req, res) => {
 });
 
 router.use('/auth', require('./authRoutes'));
+router.use('/uploads', require('./uploadRoutes'));
 router.use('/dashboard', require('./dashboardRoutes'));
 router.use('/customers', require('./customerRoutes'));
 router.use('/payments', require('./paymentRoutes'));

@@ -72,7 +72,7 @@ const validateMainCategory = (body, { isUpdate = false } = {}) => {
   if (isUpdate && body.moduleType !== undefined) {
     errors.push({ field: 'moduleType', message: 'moduleType cannot be changed' });
   }
-  if (!isUpdate && !MODULE_TYPES.includes(body.moduleType)) {
+  if (!isUpdate && body.moduleType !== undefined && !MODULE_TYPES.includes(body.moduleType)) {
     errors.push({ field: 'moduleType', message: `moduleType must be one of: ${MODULE_TYPES.join(', ')}` });
   }
   return errors;

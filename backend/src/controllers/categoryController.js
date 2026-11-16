@@ -5,6 +5,7 @@ const { assertCanMove, assertCanDelete } = require('../services/catalogService')
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 const { sendSuccess } = require('../utils/response');
+const { publicPath, removeUploadedFile, removeStoredImage } = require('../middleware/upload');
 const {
   getPagination,
   paginationMeta,
@@ -51,26 +52,44 @@ exports.getOne = asyncHandler(async (req, res) => {
   sendSuccess(res, { data: item });
 });
 
-exports.create = asyncHandler(async (req, res) => {
-  const data = pick(req.body, FIELDS);
-  await ensureMainCategoryExists(data.mainCategory);
+// The admin form uploads the image as a file (multipart field "image"); JSON bodies with image.url still work.
+const withUploadedImage = (req, data) => {
+  if (req.file) data.image = { url: publicPath('categories', req.file.filename) };
+  return data;
+};
 
-  const item = await Category.create(data);
-  sendSuccess(res, { statusCode: 201, message: 'Category created', data: item });
+exports.create = asyncHandler(async (req, res) => {
+  try {
+    const data = withUploadedImage(req, pick(req.body, FIELDS));
+    await ensureMainCategoryExists(data.mainCategory);
+
+    const item = await Category.create(data);
+    sendSuccess(res, { statusCode: 201, message: 'Category created', data: item });
+  } catch (err) {
+    if (req.file) removeUploadedFile(req.file.path);
+    throw err;
+  }
 });
 
 exports.update = asyncHandler(async (req, res) => {
   const item = await Category.findById(req.params.id);
   if (!item) throw new ApiError(404, 'Category not found');
 
-  const data = pick(req.body, FIELDS);
-  if (data.mainCategory) {
-    await ensureMainCategoryExists(data.mainCategory);
-    if (String(data.mainCategory) !== String(item.mainCategory)) await assertCanMove('category', item._id, 'category');
-  }
+  const previousImage = item.image?.url;
+  try {
+    const data = withUploadedImage(req, pick(req.body, FIELDS));
+    if (data.mainCategory) {
+      await ensureMainCategoryExists(data.mainCategory);
+      if (String(data.mainCategory) !== String(item.mainCategory)) await assertCanMove('category', item._id, 'category');
+    }
 
-  item.set(data);
-  await item.save();
+    item.set(data);
+    await item.save();
+  } catch (err) {
+    if (req.file) removeUploadedFile(req.file.path);
+    throw err;
+  }
+  if (req.file && previousImage && previousImage !== item.image?.url) removeStoredImage(previousImage);
   sendSuccess(res, { message: 'Category updated', data: item });
 });
 
@@ -110,5 +129,6 @@ exports.remove = asyncHandler(async (req, res) => {
   if (!item) throw new ApiError(404, 'Category not found');
   await assertCanDelete('category', item._id, 'category', SubCategory, 'category');
   await item.deleteOne();
+  removeStoredImage(item.image?.url);
   sendSuccess(res, { message: 'Category deleted', data: { _id: item._id } });
 });

@@ -4,6 +4,7 @@ const { assertCanMove, assertCanDelete } = require('../services/catalogService')
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 const { sendSuccess } = require('../utils/response');
+const { publicPath, removeUploadedFile, removeStoredImage } = require('../middleware/upload');
 const {
   getPagination,
   paginationMeta,
@@ -55,26 +56,44 @@ exports.getOne = asyncHandler(async (req, res) => {
   sendSuccess(res, { data: item });
 });
 
-exports.create = asyncHandler(async (req, res) => {
-  const data = pick(req.body, FIELDS);
-  await ensureCategoryExists(data.category);
+// The admin form uploads the image as a file (multipart field "image"); JSON bodies with image.url still work.
+const withUploadedImage = (req, data) => {
+  if (req.file) data.image = { url: publicPath('sub-categories', req.file.filename) };
+  return data;
+};
 
-  const item = await SubCategory.create(data);
-  sendSuccess(res, { statusCode: 201, message: 'Sub-category created', data: item });
+exports.create = asyncHandler(async (req, res) => {
+  try {
+    const data = withUploadedImage(req, pick(req.body, FIELDS));
+    await ensureCategoryExists(data.category);
+
+    const item = await SubCategory.create(data);
+    sendSuccess(res, { statusCode: 201, message: 'Sub-category created', data: item });
+  } catch (err) {
+    if (req.file) removeUploadedFile(req.file.path);
+    throw err;
+  }
 });
 
 exports.update = asyncHandler(async (req, res) => {
   const item = await SubCategory.findById(req.params.id);
   if (!item) throw new ApiError(404, 'Sub-category not found');
 
-  const data = pick(req.body, FIELDS);
-  if (data.category) {
-    await ensureCategoryExists(data.category);
-    if (String(data.category) !== String(item.category)) await assertCanMove('subCategory', item._id, 'sub-category');
-  }
+  const previousImage = item.image?.url;
+  try {
+    const data = withUploadedImage(req, pick(req.body, FIELDS));
+    if (data.category) {
+      await ensureCategoryExists(data.category);
+      if (String(data.category) !== String(item.category)) await assertCanMove('subCategory', item._id, 'sub-category');
+    }
 
-  item.set(data);
-  await item.save();
+    item.set(data);
+    await item.save();
+  } catch (err) {
+    if (req.file) removeUploadedFile(req.file.path);
+    throw err;
+  }
+  if (req.file && previousImage && previousImage !== item.image?.url) removeStoredImage(previousImage);
   sendSuccess(res, { message: 'Sub-category updated', data: item });
 });
 
@@ -114,5 +133,6 @@ exports.remove = asyncHandler(async (req, res) => {
   if (!item) throw new ApiError(404, 'Sub-category not found');
   await assertCanDelete('subCategory', item._id, 'sub-category');
   await item.deleteOne();
+  removeStoredImage(item.image?.url);
   sendSuccess(res, { message: 'Sub-category deleted', data: { _id: item._id } });
 });
