@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Modal from "../common/Modal";
 import SafeImage from "../common/SafeImage";
-import { isHttpUrl } from "../../utils/formatters";
 import { assetUrl } from "../../services/api";
 
 const MAX_IMAGE_MB = 5;
@@ -14,8 +13,7 @@ const parentLabel = (p) =>
 const initial = (config, item) => {
   const v = { isActive: item ? item.isActive !== false : true };
   config.fields.forEach(([key, , kind]) => {
-    if (kind === "image") v[key] = item?.image?.url || "";
-    else if (kind === "file")
+    if (kind === "file")
       v[key] = null; // newly chosen File; the saved image is shown from the record
     else if (kind === "parent") v[key] = item?.[key]?._id || item?.[key] || "";
     else if (kind === "select") v[key] = item?.[key] || "readymade";
@@ -64,8 +62,6 @@ export default function CatalogEditor({
       if (["name"].includes(k) && !String(v).trim())
         e[k] = `${label} is required`;
       if (kind === "parent" && !v) e[k] = `Select a ${label.toLowerCase()}`;
-      if (kind === "image" && v && !isHttpUrl(v))
-        e[k] = "Enter a valid http(s) URL";
       if (kind === "file") {
         if (v && !IMAGE_TYPES.includes(v.type))
           e[k] = "Choose a JPG, PNG, WEBP or GIF image";
@@ -94,9 +90,7 @@ export default function CatalogEditor({
         if (values[k]) payload[k] = values[k];
         return;
       }
-      if (kind === "image") {
-        if (values[k].trim()) payload.image = { url: values[k].trim() };
-      } else if (kind === "number") {
+      if (kind === "number") {
         if (values[k] !== "") payload[k] = Number(values[k]);
       } else
         payload[k] =
@@ -190,13 +184,7 @@ export default function CatalogEditor({
                 </select>
               ) : (
                 <input
-                  type={
-                    kind === "number"
-                      ? "number"
-                      : kind === "image"
-                        ? "url"
-                        : "text"
-                  }
+                  type={kind === "number" ? "number" : "text"}
                   min={kind === "number" ? "0" : undefined}
                   value={values[key]}
                   readOnly={!!modal.fixed?.[key]}
@@ -220,9 +208,6 @@ export default function CatalogEditor({
                 <small className="hint">
                   The module type cannot be changed.
                 </small>
-              )}
-              {kind === "image" && values[key] && isHttpUrl(values[key]) && (
-                <SafeImage src={values[key]} size={64} />
               )}
               {kind === "file" && (preview || savedImage) && (
                 <SafeImage src={preview || assetUrl(savedImage)} size={64} />

@@ -3,6 +3,7 @@ import Modal from "./Modal";
 import StatusBadge from "./StatusBadge";
 import SafeImage from "./SafeImage";
 import { getOrder } from "../../services/orderService";
+import { assetUrl } from "../../services/api";
 import { money, date, dateTime, colorLabel } from "../../utils/formatters";
 
 const Info = ({ label, children }) => (
@@ -250,7 +251,12 @@ function Stitching({ o }) {
           <h4>Design images</h4>
           <div className="gallery">
             {d.images.map((im, i) => (
-              <a key={i} href={im.url} target="_blank" rel="noreferrer">
+              <a
+                key={i}
+                href={assetUrl(im.url)}
+                target="_blank"
+                rel="noreferrer"
+              >
                 <SafeImage src={im.url} alt={im.alt} size={96} />
               </a>
             ))}

@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import Modal from "../common/Modal";
 import CategorySelects from "./CategorySelects";
 import ImageListEditor from "./ImageListEditor";
+import { useUploading } from "../../services/uploadService";
 import { blankImage, uid } from "../../utils/variants";
-import { isHttpUrl } from "../../utils/formatters";
 
 const toForm = (d) => ({
   mainCategory: d?.mainCategory?._id || d?.mainCategory || "",
@@ -22,6 +22,7 @@ const toForm = (d) => ({
 export default function DesignForm({ design, onClose, onSubmit, notify }) {
   const [form, setForm] = useState(() => toForm(design));
   const [busy, setBusy] = useState(false);
+  const uploading = useUploading();
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
@@ -33,10 +34,6 @@ export default function DesignForm({ design, onClose, onSubmit, notify }) {
       e.referenceCode = "Reference code is required";
     ["mainCategory", "category", "subCategory"].forEach((k) => {
       if (!form[k]) e[k] = "Required";
-    });
-    form.images.forEach((img, i) => {
-      if (img.url.trim() && !isHttpUrl(img.url))
-        e[`image-${i}`] = "Enter a valid http(s) URL";
     });
     if (
       form.displayOrder === "" ||
@@ -91,8 +88,12 @@ export default function DesignForm({ design, onClose, onSubmit, notify }) {
           <button type="button" className="outline-btn" onClick={onClose}>
             Cancel
           </button>
-          <button form="design-form" className="primary-btn" disabled={busy}>
-            {busy ? "Saving…" : "Save design"}
+          <button
+            form="design-form"
+            className="primary-btn"
+            disabled={busy || uploading}
+          >
+            {busy ? "Saving…" : uploading ? "Uploading image…" : "Save design"}
           </button>
         </>
       }

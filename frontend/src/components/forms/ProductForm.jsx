@@ -9,6 +9,7 @@ import SizeSelector from "./SizeSelector";
 import ColorEditor from "./ColorEditor";
 import VariantTable from "./VariantTable";
 import { inventoryHistory } from "../../services/catalogService";
+import { useUploading } from "../../services/uploadService";
 import {
   blankProductForm,
   generateVariants,
@@ -39,6 +40,7 @@ export default function ProductForm({ product, onClose, onSubmit, notify }) {
     product ? productToForm(product) : blankProductForm(),
   );
   const [tab, setTab] = useState("basic");
+  const uploading = useUploading();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [confirm, setConfirm] = useState(null);
@@ -556,10 +558,14 @@ export default function ProductForm({ product, onClose, onSubmit, notify }) {
             <button
               type="button"
               className="primary-btn"
-              disabled={busy}
+              disabled={busy || uploading}
               onClick={submit}
             >
-              {busy ? "Saving…" : "Save product"}
+              {busy
+                ? "Saving…"
+                : uploading
+                  ? "Uploading image…"
+                  : "Save product"}
             </button>
           </>
         }
