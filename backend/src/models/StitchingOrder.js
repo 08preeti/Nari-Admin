@@ -35,7 +35,7 @@ const stitchingOrderSchema = new Schema(
     measurementNotes: { type: String, trim: true, maxlength: 1000 },
     orderDate: { type: Date, default: Date.now },
     deliveryDate: { type: Date },
-    // Orders typed in from the admin "Add order" form ('admin') vs placed from the storefront ('storefront').
+    
     source: {
       type: String,
       enum: ["storefront", "admin"],

@@ -66,7 +66,6 @@ export default function ProductForm({ product, onClose, onSubmit, notify }) {
         .catch(() => setHistory([]));
   }, [tab, form._id, history]);
 
-  // ---- sizes ----
   const addSize = (s) =>
     set((f) => ({
       sizes: f.sizes.some((x) => x.toLowerCase() === s.toLowerCase())
@@ -102,12 +101,11 @@ export default function ProductForm({ product, onClose, onSubmit, notify }) {
       ? removeSize(form.sizes.find((x) => x.toLowerCase() === s.toLowerCase()))
       : addSize(s);
 
-  // ---- colors ----
   const addColor = (c) => set((f) => ({ colors: [...f.colors, c] }));
   const changeColor = (key, patch) =>
     set((f) => ({
       colors: f.colors.map((c) => (c.key === key ? { ...c, ...patch } : c)),
-      // keep variants in sync when a colour is renamed / recoloured
+     
       variants:
         patch.name === undefined && patch.hex === undefined
           ? f.variants

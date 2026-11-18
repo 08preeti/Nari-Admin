@@ -54,7 +54,7 @@ export default function DashboardPage({ onNavigate }) {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   };
-  useEffect(load, [preset, from, to]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(load, [preset, from, to]);
 
   const p = data?.products,
     o = data?.orders,
@@ -62,7 +62,6 @@ export default function DashboardPage({ onNavigate }) {
   const ready = !loading && !!data;
   const v = (x) => (ready ? x : "…");
 
-  // [label, value, sub text, icon, icon tone, page to open, optional value tone]
   const salesCards = [
     [
       "Total orders",

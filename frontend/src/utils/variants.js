@@ -1,6 +1,3 @@
-// Pure product-form logic (no React, no network). Unit-tested in frontend/tests/variants.test.js.
-// The server is the source of truth: it re-validates everything below.
-
 let counter = 0;
 export const uid = () => `k${Date.now().toString(36)}${(counter += 1)}`;
 
@@ -119,7 +116,6 @@ export const productToForm = (p) => {
   };
 };
 
-// ---- variant generation ----
 export const missingCombinations = ({ sizes, colors, variants }) => {
   const existing = new Set(
     variants.map((v) => comboKey(v.size, v.color && v.color.name)),
@@ -137,7 +133,6 @@ export const missingCombinations = ({ sizes, colors, variants }) => {
   return out;
 };
 
-// Appends rows for combinations that do not exist yet. Existing rows are returned untouched.
 export const generateVariants = ({
   productSku,
   sizes,
@@ -172,7 +167,6 @@ export const generateVariants = ({
   return { variants: [...variants, ...added], addedCount: added.length };
 };
 
-// Which variants depend on a size / colour that is about to be removed?
 export const variantsUsing = (variants, { size, colorName }) =>
   variants.filter(
     (v) =>
@@ -202,7 +196,6 @@ export const variantAvailability = (v, threshold = 5) => {
   return s <= threshold ? "low_stock" : "in_stock";
 };
 
-// ---- validation (mirrors the server; shown inline) ----
 const num = (v) =>
   v === "" || v === null || v === undefined ? NaN : Number(v);
 export const SECTIONS = [
@@ -218,8 +211,8 @@ export const SECTIONS = [
 ];
 
 export const validateForm = (f) => {
-  const errors = {}; // key -> message
-  const section = {}; // section -> count
+  const errors = {};
+  const section = {};
   const add = (sec, key, msg) => {
     errors[key] = msg;
     section[sec] = (section[sec] || 0) + 1;
@@ -345,7 +338,7 @@ export const formToPayload = (f) => {
         isActive: v.isActive,
         images: imagesToPayload(v.images),
       };
-      // Existing variants only send stock when the admin actually changed it (so live order deductions are never overwritten)
+
       if (!v._id || Number(v.stock) !== Number(v.originalStock))
         out.stock = Number(v.stock);
       return out;

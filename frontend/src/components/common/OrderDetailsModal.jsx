@@ -50,7 +50,6 @@ const History = ({ list }) => (
   </div>
 );
 
-// Orders typed in from the Add order form (basic details, no design / product lines).
 function Basic({ o }) {
   const c = o.catalog || {};
   return (

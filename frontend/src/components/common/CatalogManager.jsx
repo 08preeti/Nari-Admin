@@ -44,7 +44,6 @@ export default function CatalogManager({ type, config, notify, heading }) {
     )
       .then((rows) => setParents(Object.fromEntries(rows)))
       .catch((e) => notify(e.message, "error"));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type, items.length]);
 
   async function save(payload) {
@@ -71,8 +70,8 @@ export default function CatalogManager({ type, config, notify, heading }) {
   };
   const parentName = (i) => i.mainCategory?.name || i.category?.name || "—";
   const hasImage = config.fields.some((f) => f[2] === "file");
-  const showParent = !!config.parentKey; // categories / sub-categories show their parent
-  const showOrder = !config.simple; // simple screens (name + image only) have no display order or description
+  const showParent = !!config.parentKey;
+  const showOrder = !config.simple;
   const cols = 2 + (showParent ? 1 : 0) + (showOrder ? 1 : 0);
   const addLabel = config.addLabel || "Add new";
   const addButton = (

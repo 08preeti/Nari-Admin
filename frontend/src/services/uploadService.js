@@ -5,13 +5,10 @@ const BASE = (
   import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api"
 ).replace(/\/$/, "");
 
-// Uploads one image file and resolves with its public URL.
-// (Not using api() because that always sends JSON; the browser must set the multipart header itself.)
 let pending = 0;
 const listeners = new Set();
 const emit = () => listeners.forEach((l) => l(pending > 0));
 
-// True while any image is still uploading, so forms can hold the Save button until the upload is done.
 export function useUploading() {
   const [busy, setBusy] = useState(pending > 0);
   useEffect(() => {
@@ -52,9 +49,7 @@ async function sendImage(file) {
   let json = {};
   try {
     json = await response.json();
-  } catch {
-    /* non-JSON body */
-  }
+  } catch {}
   if (response.status === 401) {
     clearToken();
     window.dispatchEvent(new Event("nari:unauthorized"));

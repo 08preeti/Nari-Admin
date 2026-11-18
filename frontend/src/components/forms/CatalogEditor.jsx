@@ -13,8 +13,7 @@ const parentLabel = (p) =>
 const initial = (config, item) => {
   const v = { isActive: item ? item.isActive !== false : true };
   config.fields.forEach(([key, , kind]) => {
-    if (kind === "file")
-      v[key] = null; // newly chosen File; the saved image is shown from the record
+    if (kind === "file") v[key] = null;
     else if (kind === "parent") v[key] = item?.[key]?._id || item?.[key] || "";
     else if (kind === "select") v[key] = item?.[key] || "readymade";
     else
@@ -32,7 +31,7 @@ export default function CatalogEditor({
   onSave,
 }) {
   const editing = !!modal.item;
-  // modal.fixed = values the page decides in advance (e.g. the name of a catalogue section); those inputs are read-only.
+
   const [values, setValues] = useState(() => ({
     ...initial(config, modal.item),
     ...(modal.fixed || {}),
@@ -66,7 +65,8 @@ export default function CatalogEditor({
         if (v && !IMAGE_TYPES.includes(v.type))
           e[k] = "Choose a JPG, PNG, WEBP or GIF image";
         else if (v && v.size > MAX_IMAGE_KB * 1024)
-          e[k] = `Image size is too large. Maximum allowed size is ${MAX_IMAGE_KB} KB.`;
+          e[k] =
+            `Image size is too large. Maximum allowed size is ${MAX_IMAGE_KB} KB.`;
       }
       if (
         kind === "number" &&
@@ -77,7 +77,7 @@ export default function CatalogEditor({
     });
     return e;
   }, [values, config]);
-  // File errors (type/size) show right away; other fields only after the first submit.
+
   const shown = submitted
     ? errors
     : Object.fromEntries(
@@ -103,7 +103,7 @@ export default function CatalogEditor({
         payload[k] =
           typeof values[k] === "string" ? values[k].trim() : values[k];
     });
-    // Files go as multipart form data; everything else as JSON.
+
     let body = payload;
     if (config.fields.some((f) => f[2] === "file")) {
       body = new FormData();

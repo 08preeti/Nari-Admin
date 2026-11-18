@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { ImageOff } from "lucide-react";
 import { assetUrl } from "../../services/api";
 
-// Image with a placeholder when the URL is empty or fails to load.
 export default function SafeImage({
   src,
   alt = "",

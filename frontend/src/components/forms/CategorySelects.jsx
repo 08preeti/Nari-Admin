@@ -4,10 +4,6 @@ import { listRecords } from "../../services/catalogService";
 const label = (x) => (x.isActive === false ? `${x.name} (inactive)` : x.name);
 const idOf = (x) => (x && typeof x === "object" ? x._id : x);
 
-// Main category, Category and Subcategory dropdowns. All three load their lists straight away.
-// - Pick a main category: Category shows only its categories (and Subcategory resets).
-// - Pick a category: Subcategory shows only its subcategories.
-// - Pick a category or subcategory first: its parent(s) are filled in automatically.
 export default function CategorySelects({
   value,
   onChange,
@@ -41,7 +37,6 @@ export default function CategorySelects({
       .catch((e) => setLoadError(e.message));
   }, [value.category]);
 
-  // With no parent chosen, only show items that belong to this module's main categories.
   const mainIds = new Set(mains.map((m) => m._id));
   const catOptions = value.mainCategory
     ? cats

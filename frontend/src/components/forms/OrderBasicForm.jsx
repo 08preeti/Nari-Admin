@@ -6,8 +6,6 @@ import { money } from "../../utils/formatters";
 const dateInput = (v) => (v ? new Date(v).toISOString().slice(0, 10) : "");
 const today = () => new Date().toISOString().slice(0, 10);
 
-// Basic order details: customer, address, main category / category / subcategory,
-// total, amount paid, pending amount (calculated), order received date and delivered date.
 export default function OrderBasicForm({ order, onClose, onSave }) {
   const editing = !!order;
   const [v, setV] = useState(() => ({

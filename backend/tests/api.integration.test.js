@@ -1,6 +1,3 @@
-// End-to-end API tests against a REAL MongoDB. They are skipped unless TEST_MONGODB_URI is set.
-//   TEST_MONGODB_URI=mongodb://127.0.0.1:27017/the-nari-test npm test
-// SAFETY: the database is wiped at the start, so its name must contain "test".
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
@@ -101,7 +98,7 @@ test("API integration", { skip }, async (t) => {
       price: 1,
     });
     assert.equal(wrong.status, 400);
-    // Deleting a main category deletes its categories and subcategories too.
+
     const tmp = await call("POST", "/main-categories", { name: "Temp" });
     const tmpC = await call("POST", "/categories", {
       name: "Temp cat",
@@ -188,7 +185,7 @@ test("API integration", { skip }, async (t) => {
       assert.equal(product.images.length, 5);
       assert.equal(product.variants.length, 4);
       assert.equal(product.totalStock, 23);
-      assert.equal(product.stock, undefined); // no conflicting product-level stock
+      assert.equal(product.stock, undefined);
 
       const dupProduct = await call("POST", "/products", {
         ...payload(),
@@ -198,7 +195,7 @@ test("API integration", { skip }, async (t) => {
       const dupVariant = await call("POST", "/products", {
         ...payload(),
         sku: "NK-002",
-      }); // reuses NK-001-* variant SKUs
+      });
       assert.equal(dupVariant.status, 409);
       const badSale = await call("POST", "/products", {
         ...payload(),
@@ -224,7 +221,6 @@ test("API integration", { skip }, async (t) => {
       assert.equal(edit.body.data.images.length, 5);
       assert.equal(edit.body.data.variants.length, 4);
 
-      // a stale form that only edits non-stock fields is still fine...
       assert.equal(
         (
           await call("PUT", `/products/${product._id}`, {
@@ -234,7 +230,7 @@ test("API integration", { skip }, async (t) => {
         ).status,
         200,
       );
-      // ...but a stale form that overwrites stock numbers is refused
+
       const staleStock = p.variants.map((v) =>
         v.sku === "NK-001-RED-S" ? { ...v, stock: 99 } : v,
       );
@@ -272,7 +268,7 @@ test("API integration", { skip }, async (t) => {
       assert.equal(upd.status, 200);
       const m = upd.body.data.variants.find((v) => v.sku === "NK-001-RED-M2");
       assert.equal(m.price, 1111);
-      assert.equal(m.stock, 5); // stock preserved through SKU/price edit
+      assert.equal(m.stock, 5);
       product = upd.body.data;
     },
   );
@@ -318,7 +314,6 @@ test("API integration", { skip }, async (t) => {
         409,
       ); // 0 stock
 
-      // size/color selection (no SKU) resolves to the right variant
       const bySel = await call(
         "POST",
         "/readymade-orders",
@@ -365,7 +360,7 @@ test("API integration", { skip }, async (t) => {
     const again = (await call("GET", `/readymade-orders/${orderDoc._id}`)).body
       .data;
     assert.equal(again.items[0].unitPrice, 999);
-    assert.equal(again.items[0].productSnapshot.name, "Renamed"); // name at purchase time, not 'Changed Name'
+    assert.equal(again.items[0].productSnapshot.name, "Renamed");
   });
 
   await t.test(
@@ -489,7 +484,7 @@ test("API integration", { skip }, async (t) => {
       (await call("PATCH", `/payments/readymade/${id}`, { totalAmount: 10 }))
         .status,
       400,
-    ); // readymade totals are fixed
+    );
   });
 
   await t.test("stitching: design, order, payment", async () => {
@@ -505,7 +500,7 @@ test("API integration", { skip }, async (t) => {
     const duplicate = await call("POST", "/main-categories", {
       name: "stitch",
     });
-    assert.equal(duplicate.status, 409); // same main category name (any letter case) is not allowed twice
+    assert.equal(duplicate.status, 409);
     const d = await call("POST", "/designs", {
       mainCategory: mc.body.data._id,
       category: c.body.data._id,
@@ -555,7 +550,7 @@ test("API integration", { skip }, async (t) => {
     assert.deepEqual(future.trends, []);
 
     const customers = (await call("GET", "/customers")).body.data;
-    assert.equal(customers.length, 1); // one mobile number -> one customer across both order types
+    assert.equal(customers.length, 1);
     assert.ok(
       customers[0].readymadeOrders > 0 && customers[0].stitchingOrders === 1,
     );

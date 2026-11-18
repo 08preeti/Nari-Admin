@@ -36,15 +36,15 @@ const orderItemSchema = new Schema(
     variant: {
       sku: String,
       size: String,
-      // New orders store { name, hex }. Orders created before variants existed stored a plain string.
+     
       color: { type: Schema.Types.Mixed },
     },
     quantity: { type: Number, required: true, min: 1 },
-    regularPrice: { type: Number, min: 0 }, // price at purchase before any sale price
-    salePrice: { type: Number, min: 0 }, // sale price at purchase, if one applied
-    unitPrice: { type: Number, required: true, min: 0 }, // price actually charged per unit
+    regularPrice: { type: Number, min: 0 },
+    salePrice: { type: Number, min: 0 }, 
+    unitPrice: { type: Number, required: true, min: 0 }, 
     lineTotal: { type: Number, required: true, min: 0 },
-    // Where stock was taken from: 'variant', 'product' (legacy product-level stock) or 'none' (untracked).
+   
     stockSource: {
       type: String,
       enum: ["variant", "product", "none"],
@@ -70,15 +70,20 @@ const readymadeOrderSchema = new Schema(
       ],
     },
     orderTotal: { type: Number, required: true, min: 0 },
-    // Orders typed in from the admin "Add order" form ("admin") vs placed from the storefront ("storefront").
-    source: { type: String, enum: ["storefront", "admin"], default: "storefront", index: true },
+    
+    source: {
+      type: String,
+      enum: ["storefront", "admin"],
+      default: "storefront",
+      index: true,
+    },
     catalog: { type: catalogSchema },
     receivedDate: { type: Date },
     deliveredDate: { type: Date },
 
     notes: { type: String, trim: true, maxlength: 1000 },
     payment: { type: paymentSchema, default: () => ({}) },
-    // Absent on orders created before inventory tracking, so they never touch stock.
+    
     inventory: {
       deducted: { type: Boolean },
       deductedAt: Date,

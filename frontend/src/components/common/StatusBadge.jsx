@@ -1,5 +1,9 @@
-import { statusTone } from '../../utils/constants';
+import { statusTone } from "../../utils/constants";
 
 export default function StatusBadge({ status, label, tone }) {
-  return <span className={`status ${tone || statusTone(status)}`}>{label || status}</span>;
+  return (
+    <span className={`status ${tone || statusTone(status)}`}>
+      {label || status}
+    </span>
+  );
 }

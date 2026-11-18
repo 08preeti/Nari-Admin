@@ -6,7 +6,6 @@ import { uploadImage } from "../../services/uploadService";
 const TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_KB = 250;
 
-// Pick an image from the device. The file is uploaded right away and `onChange` receives its URL ('' when removed).
 export default function ImageUpload({
   value,
   onChange,
@@ -26,7 +25,7 @@ export default function ImageUpload({
 
   async function pick(e) {
     const file = e.target.files?.[0];
-    e.target.value = ""; // lets the same file be chosen again later
+    e.target.value = "";
     if (!file) return;
     if (!TYPES.includes(file.type)) {
       setError("Choose a JPG, PNG, WebP or GIF image.");

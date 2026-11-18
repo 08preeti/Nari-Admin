@@ -16,7 +16,6 @@ const imageSchema = new Schema(
   { _id: false },
 );
 
-// Snapshot of the main category / category / subcategory picked on an order (kept even if they are renamed later).
 const nameRef = new Schema(
   { id: { type: Schema.Types.ObjectId }, name: { type: String, trim: true } },
   { _id: false },
@@ -45,7 +44,7 @@ const customerSchema = new Schema(
 
 const paymentHistorySchema = new Schema(
   {
-    amount: { type: Number, required: true }, // signed change in paid amount
+    amount: { type: Number, required: true },
     paidAmountAfter: { type: Number, required: true },
     method: { type: String, trim: true },
     note: { type: String, trim: true },
@@ -79,7 +78,6 @@ const statusHistorySchema = new Schema(
   { _id: false },
 );
 
-// Payment status that matches the amounts. Pending when nothing is paid, Paid when fully paid.
 const derivePaymentStatus = (total, paid) => {
   if (paid <= 0) return "Pending";
   if (paid >= total) return "Paid";
@@ -98,7 +96,7 @@ const applyPaymentRules = (schema) => {
         );
       }
       this.payment.balance = Math.max(round2(total - paid), 0);
-      // Keep the status truthful whenever the amounts change (older records are left untouched).
+
       if (
         this.isNew ||
         this.isModified("payment.paidAmount") ||

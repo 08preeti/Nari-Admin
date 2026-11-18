@@ -10,8 +10,6 @@ const app = express();
 
 app.disable('x-powered-by');
 
-// In production only the origins listed in CORS_ORIGINS may call the API from a browser.
-// In development an empty list allows any origin for convenience.
 const corsOrigin = env.corsOrigins.length > 0 ? env.corsOrigins : env.nodeEnv === 'production' ? false : true;
 if (env.nodeEnv === 'production' && env.corsOrigins.length === 0) {
   console.warn('CORS_ORIGINS is empty: browser cross-origin requests are blocked in production.');
@@ -27,7 +25,6 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: '1mb' }));
 
-// Uploaded images (category images etc.) are public so the storefront can show them.
 app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '7d', index: false, dotfiles: 'ignore' }));
 
 app.use('/api', routes);

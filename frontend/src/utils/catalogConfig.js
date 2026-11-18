@@ -1,6 +1,3 @@
-// Generic catalogue screens (products and designs have their own dedicated pages).
-// Field kind 'file' = image chosen from the device (the field key is the upload field name, so keep it "image").
-// `simple: true` = no Active toggle in the form.
 export const catalogConfigs = {
   "main-categories": {
     title: "Main categories",
@@ -29,7 +26,7 @@ export const catalogConfigs = {
       ["image", "Image", "file"],
     ],
   },
-  // titles used by the top bar
+
   products: { title: "Products" },
   designs: { title: "Designs" },
 };

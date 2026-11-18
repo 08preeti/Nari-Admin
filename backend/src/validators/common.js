@@ -28,7 +28,6 @@ const isHttpUrl = (value) => {
   }
 };
 
-// An image is either an uploaded file path (/uploads/<folder>/<file>) or a full http(s) URL.
 const isUploadedPath = (value) =>
   typeof value === "string" &&
   value.length <= 300 &&

@@ -1,7 +1,6 @@
 import { api } from "./api";
 import { toQuery } from "../utils/query";
 
-// File uploads are sent as FormData untouched; everything else as JSON.
 const toBody = (payload) =>
   typeof FormData !== "undefined" && payload instanceof FormData
     ? payload

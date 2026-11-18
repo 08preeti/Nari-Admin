@@ -2,7 +2,6 @@ import { ArrowUp, ArrowDown, Trash2, Plus } from "lucide-react";
 import ImageUpload from "./ImageUpload";
 import { blankImage } from "../../utils/variants";
 
-// Dynamic list of uploaded images: choose a file for each row, add, remove, reorder. Always shows at least one row.
 export default function ImageListEditor({
   images,
   onChange,

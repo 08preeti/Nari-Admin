@@ -28,7 +28,6 @@ const checkHierarchy = async ({ mainCategory, category, subCategory }) => {
 
 module.exports = { checkHierarchy };
 
-// ---- Referential protection for the Main Category -> Category -> Subcategory tree ----
 const Product = require("../models/Product");
 const Design = require("../models/Design");
 const StitchingOrder = require("../models/StitchingOrder");
@@ -44,7 +43,6 @@ const countUsage = async (field, id) => {
 const usageMessage = (usage) =>
   `${usage.products} product(s) and ${usage.designs} design(s)`;
 
-// Moving a node under a different parent would put its products/designs under a mismatched hierarchy.
 const assertCanMove = async (field, id, label) => {
   const usage = await countUsage(field, id);
   if (usage.total > 0) {
@@ -77,8 +75,6 @@ const designInUse = (id) => StitchingOrder.exists({ design: id });
 
 const { removeStoredImage } = require("../middleware/upload");
 
-// Deleting a parent deletes everything under it (images too). Products / designs are never deleted
-// here: assertCanDelete refuses first if any of them still use the record.
 const deleteSubCategoriesOf = async (categoryIds) => {
   const subs = await SubCategory.find({
     category: { $in: categoryIds },

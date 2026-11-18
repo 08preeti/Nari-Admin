@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const { ADMIN_ROLES } = require('../utils/constants');
+const mongoose = require("mongoose");
+const { ADMIN_ROLES } = require("../utils/constants");
 
 const adminUserSchema = new mongoose.Schema(
   {
@@ -12,11 +12,11 @@ const adminUserSchema = new mongoose.Schema(
       trim: true,
     },
     passwordHash: { type: String, required: true, select: false },
-    role: { type: String, enum: ADMIN_ROLES, default: 'owner' },
+    role: { type: String, enum: ADMIN_ROLES, default: "owner" },
     isActive: { type: Boolean, default: true },
     lastLogin: { type: Date },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-module.exports = mongoose.model('AdminUser', adminUserSchema);
+module.exports = mongoose.model("AdminUser", adminUserSchema);
