@@ -21,7 +21,7 @@ const errorHandler = (err, req, res, next) => {
     message = `Duplicate value: ${fields} already exists`;
   } else if (err.name === 'MulterError') {
     statusCode = 400;
-    message = err.code === 'LIMIT_FILE_SIZE' ? 'Image is too large (max 5 MB)' : `Upload error: ${err.message}`;
+    message = err.code === 'LIMIT_FILE_SIZE' ? 'Image size is too large. Maximum allowed size is 250 KB.' : `Upload error: ${err.message}`;
   } else if (err.name === 'JsonWebTokenError') {
     statusCode = 401;
     message = 'Invalid token';

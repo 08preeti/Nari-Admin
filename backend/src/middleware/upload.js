@@ -8,7 +8,8 @@ const ApiError = require('../utils/ApiError');
 const UPLOAD_DIR = path.join(__dirname, '..', '..', 'uploads');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
-const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_KB = 250;
+const MAX_BYTES = MAX_KB * 1024; // 250 KB
 const EXTENSIONS = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif' };
 
 // The path saved in the database, e.g. /uploads/categories/1699999999-ab12cd34ef56.jpg
@@ -85,7 +86,7 @@ const imageUpload = (folder) => {
     uploader.single(field)(req, res, (err) => {
       if (err) {
         if (err instanceof multer.MulterError) {
-          return next(new ApiError(400, err.code === 'LIMIT_FILE_SIZE' ? 'Image must be 5 MB or smaller' : `Upload failed: ${err.message}`));
+          return next(new ApiError(400, err.code === 'LIMIT_FILE_SIZE' ? `Image size is too large. Maximum allowed size is ${MAX_KB} KB.` : `Upload failed: ${err.message}`));
         }
         return next(err);
       }

@@ -3,7 +3,7 @@ import Modal from "../common/Modal";
 import SafeImage from "../common/SafeImage";
 import { assetUrl } from "../../services/api";
 
-const MAX_IMAGE_MB = 5;
+const MAX_IMAGE_KB = 250;
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 const parentLabel = (p) =>
@@ -65,8 +65,8 @@ export default function CatalogEditor({
       if (kind === "file") {
         if (v && !IMAGE_TYPES.includes(v.type))
           e[k] = "Choose a JPG, PNG, WEBP or GIF image";
-        else if (v && v.size > MAX_IMAGE_MB * 1024 * 1024)
-          e[k] = `Image must be ${MAX_IMAGE_MB} MB or smaller`;
+        else if (v && v.size > MAX_IMAGE_KB * 1024)
+          e[k] = `Image size is too large. Maximum allowed size is ${MAX_IMAGE_KB} KB.`;
       }
       if (
         kind === "number" &&
@@ -77,7 +77,14 @@ export default function CatalogEditor({
     });
     return e;
   }, [values, config]);
-  const shown = submitted ? errors : {};
+  // File errors (type/size) show right away; other fields only after the first submit.
+  const shown = submitted
+    ? errors
+    : Object.fromEntries(
+        config.fields
+          .filter(([k, , kind]) => kind === "file" && errors[k])
+          .map(([k]) => [k, errors[k]]),
+      );
 
   async function submit(ev) {
     ev.preventDefault();
@@ -217,7 +224,7 @@ export default function CatalogEditor({
                   {editing && savedImage
                     ? "Choose a new file only if you want to replace the current image. "
                     : ""}
-                  JPG, PNG, WEBP or GIF, up to {MAX_IMAGE_MB} MB.
+                  JPG, PNG, WEBP or GIF, up to {MAX_IMAGE_KB} KB.
                 </small>
               )}
               {shown[key] && (

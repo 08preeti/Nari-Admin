@@ -4,7 +4,7 @@ import SafeImage from "../common/SafeImage";
 import { uploadImage } from "../../services/uploadService";
 
 const TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-const MAX_MB = 5;
+const MAX_KB = 250;
 
 // Pick an image from the device. The file is uploaded right away and `onChange` receives its URL ('' when removed).
 export default function ImageUpload({
@@ -32,8 +32,10 @@ export default function ImageUpload({
       setError("Choose a JPG, PNG, WebP or GIF image.");
       return;
     }
-    if (file.size > MAX_MB * 1024 * 1024) {
-      setError(`Image must be ${MAX_MB} MB or smaller.`);
+    if (file.size > MAX_KB * 1024) {
+      setError(
+        `Image size is too large. Maximum allowed size is ${MAX_KB} KB.`,
+      );
       return;
     }
     setError("");
@@ -81,7 +83,7 @@ export default function ImageUpload({
         </div>
         {!compact && (
           <small className="hint">
-            JPG, PNG, WebP or GIF, up to {MAX_MB} MB.
+            JPG, PNG, WebP or GIF, up to {MAX_KB} KB.
           </small>
         )}
         {error && <small className="field-error">{error}</small>}
